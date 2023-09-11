@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Laravel: beware of $touches :: Aloïs Micard — Tech Blog</title>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1"
+    />
+    <meta
+      name="description"
+      content="I have been using Laravel professionally since almost 1year, and I must say: I&amp;rsquo;m very impressed with the framework. Everything&amp;rsquo;s run smoothly, there&amp;rsquo;s a feature for (almost everything) you can think of, so you (almost) never need to reinvent the wheel.
+This is very advantageous since you only focus on building your product features by features and spend less time working on technical stuff who are less business valuable.
+Everything is fine&amp;hellip; until it&amp;rsquo;s not."
+    />
+    <meta name="keywords" content="Laravel, PHP" />
+    <meta name="robots" content="noodp" />
+    <link rel="canonical" href="/2021/11/laravel-beware-of-touches/" />
+
+    <script type="application/javascript">
+      var doNotTrack = false;
+      if (!doNotTrack) {
+        (function (i, s, o, g, r, a, m) {
+          i["GoogleAnalyticsObject"] = r;
+          (i[r] =
+            i[r] ||
+            function () {
+              (i[r].q = i[r].q || []).push(arguments);
+            }),
+            (i[r].l = 1 * new Date());
+          (a = s.createElement(o)), (m = s.getElementsByTagName(o)[0]);
+          a.async = 1;
+          a.src = g;
+          m.parentNode.insertBefore(a, m);
+        })(
+          window,
+          document,
+          "script",
+          "https://www.google-analytics.com/analytics.js",
+          "ga"
+        );
+        ga("create", "UA-100732589-2", "auto");
+
+        ga("send", "pageview");
+      }
+    </script>
+
+    <link rel="stylesheet" href="/assets/style.css" />
+
+    <link rel="stylesheet" href="/assets/green.css" />
+
+    <link
+      rel="apple-touch-icon-precomposed"
+      sizes="144x144"
+      href="/img/apple-touch-icon-144-precomposed.png"
+    />
+
+    <link rel="shortcut icon" href="/img/favicon/green.png" />
+
+    <meta name="twitter:card" content="summary" />
+
+    <meta name="twitter:creator" content="" />
+
+    <meta property="og:locale" content="en" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="og:title"
+      content="Laravel: beware of $touches :: Aloïs Micard"
+    />
+    <meta
+      property="og:description"
+      content="Every framework have their limits."
+    />
+    <meta property="og:url" content="/2021/11/laravel-beware-of-touches/" />
+    <meta property="og:site_name" content="Laravel: beware of $touches" />
+
+    <meta property="og:image" content="/" />
+
+    <meta property="og:image:width" content="2048" />
+    <meta property="og:image:height" content="1024" />
+
+    <meta
+      property="article:published_time"
+      content="2021-11-12 00:00:00 &#43;0000 UTC"
+    />
+  </head>
+  <body class="">
+    <div class="container center headings--one-size">
+      <header class="header">
+        <div class="header__inner">
+          <div class="header__logo">
+            <a href="/">
+              <div class="logo">Aloïs Micard | Tech blog</div>
+            </a>
+          </div>
+          <div class="menu-trigger">menu</div>
+        </div>
+
+        <nav class="menu">
+          <ul class="menu__inner menu__inner--desktop">
+            <li>
+              <a href="https://github.com/creekorful/blog">Blog source code</a>
+            </li>
+
+            <li><a href="https://github.com/creekorful">Github</a></li>
+
+            <li>
+              <a href="https://www.linkedin.com/in/creekorful">Linkedin</a>
+            </li>
+
+            <li><a href="https://www.creekorful.org">Website</a></li>
+          </ul>
+
+          <ul class="menu__inner menu__inner--mobile">
+            <li>
+              <a href="https://github.com/creekorful/blog">Blog source code</a>
+            </li>
+
+            <li><a href="https://github.com/creekorful">Github</a></li>
+
+            <li>
+              <a href="https://www.linkedin.com/in/creekorful">Linkedin</a>
+            </li>
+
+            <li><a href="https://www.creekorful.org">Website</a></li>
+          </ul>
+        </nav>
+      </header>
+
+      <div class="content">
+        <div class="post">
+          <h1 class="post-title">
+            <a href="/2021/11/laravel-beware-of-touches/"
+              >Laravel: beware of $touches</a
+            >
+          </h1>
+          <div class="post-meta">
+            <span class="post-date"> 2021-11-12 </span>
+
+            <span class="post-author">:: Aloïs Micard </span>
+          </div>
+
+          <span class="post-tags">
+            #<a href="/tags/laravel/">Laravel</a>&nbsp; #<a href="/tags/php/"
+              >PHP</a
+            >&nbsp;
+          </span>
+
+          <div class="post-content">
+            <div>
+              <p>
+                I have been using Laravel professionally since almost 1year, and
+                I must say: I&rsquo;m very impressed with the framework.
+                Everything&rsquo;s run smoothly, there&rsquo;s a feature for
+                <em>(almost everything)</em> you can think of, so you
+                <em>(almost)</em> never need to reinvent the wheel.
+              </p>
+              <p>
+                This is very advantageous since you only focus on building your
+                product features by features and spend less time working on
+                technical stuff who are less business valuable.
+              </p>
+              <h1 id="everything-is-fine-until-its-not">
+                Everything is fine&hellip; until it&rsquo;s not.<a
+                  href="#everything-is-fine-until-its-not"
+                  class="hanchor"
+                  ariaLabel="Anchor"
+                  >&#8983;</a
+                >
+              </h1>
+              <hr />
+              <p>Recently we have faced really weird MySQL error at work:</p>
+              <blockquote>
+                <p>
+                  SQLSTATE[HY000]: General error: 1390 Prepared statement
+                  contains too many placeholders
+                </p>
+              </blockquote>
+              <p>
+                What does it mean? It is certainly obvious:
+                <em>the prepared statement contains too many placeholders</em>.
+              </p>
+              <h2 id="what-are-placeholders-again">
+                What are placeholders again?<a
+                  href="#what-are-placeholders-again"
+                  class="hanchor"
+                  ariaLabel="Anchor"
+                  >&#8983;</a
+                >
+              </h2>
+              <p>
+                Placeholder are using in SQL prepared statement as template that
+                will be replaced by the values when the query is executed.
+                Example:
+              </p>
+              <div class="highlight">
+                <pre
+                  style="
+                    color: #f8f8f2;
+                    background-color: #272822;
+                    -moz-tab-size: 4;
+                    -o-tab-size: 4;
+                    tab-size: 4;
+                  "
+                ><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">insert</span> <span style="color:#66d9ef">into</span> users (username, email) <span style="color:#66d9ef">values</span> (<span style="color:#f92672">?</span>, <span style="color:#f92672">?</span>);
+</code></pre>
+              </div>
+              <p>
+                The following query contains placeholder for username and email
+                (identified by the &lsquo;?'). When this query will be executed
+                the values will be replaced.
+              </p>
+              <h2 id="so-wheres-the-issue">
+                So where&rsquo;s the issue?<a
+                  href="#so-wheres-the-issue"
+                  class="hanchor"
+                  ariaLabel="Anchor"
+                  >&#8983;</a
+                >
+              </h2>
+              <p>
+                Following the stacktrace, I&rsquo;ve determined that the error
+                happened when doing a <code>$model-&gt;save()</code> call. So
+                let&rsquo;s analyze the model to see if something looks off:
+              </p>
+              <div class="highlight">
+                <pre
+                  style="
+                    color: #f8f8f2;
+                    background-color: #272822;
+                    -moz-tab-size: 4;
+                    -o-tab-size: 4;
+                    tab-size: 4;
+                  "
+                ><code class="language-php" data-lang="php">namespace App\Models;
+
+/**
+ * @property Collection&lt;<span style="color:#f92672">Role</span>&gt; $roles
+ */
+class User extends Model
+{
+    protected $touches = [&#39;roles&#39;];
+
+    public function roles(): BelongsToMany
+    {
+        return $this-&gt;belongsToMany(Role::class);
+    }
+}
+</code></pre>
+              </div>
+              <p>
+                As you can see the model as nothing special declared, except for
+                a little thing: the usage of <code>$touches</code>.
+              </p>
+              <h3 id="what-is-touches-again">
+                What is $touches again?<a
+                  href="#what-is-touches-again"
+                  class="hanchor"
+                  ariaLabel="Anchor"
+                  >&#8983;</a
+                >
+              </h3>
+              <p>
+                <em
+                  >(I apologize in advance, the example below is really poor,
+                  but I couldn&rsquo;t come up with something else)</em
+                >
+              </p>
+              <p>
+                Sometime, it may be useful to bump the
+                <code>updated_at</code> of a model:
+              </p>
+              <p>
+                Let&rsquo;s see you are building an application to monitor the
+                uptime of a website. Each time the website has been checked
+                you&rsquo;ll certainly want to bump the updated_at column of the
+                Website model in order to display the value on the interface
+                (like a last_checked feature).
+              </p>
+              <p>
+                How do you touch a model to bump updated_at? Well using
+                <code>$model-&gt;touch()</code> of course!
+              </p>
+              <p>Okay thanks but what&rsquo;s with <code>$touches</code>?</p>
+              <p><img src="/img/wegettherewhenwegetthere.png" alt="" /></p>
+              <hr />
+              <p>
+                The role of the <code>$touches</code> variable is being able to
+                <em>touch</em> (bump updated_at) element of a child collection
+                when saving the parent.
+              </p>
+              <p>
+                If we take our previous <code>User</code> model as example: each
+                time you&rsquo;ll call <code>$user-&gt;save()</code> it will
+                touch the roles relation (as defined in <code>$touches</code>).
+                Since the relation is a belongs to many it will invoke the
+                following code:
+              </p>
+              <div class="highlight">
+                <pre
+                  style="
+                    color: #f8f8f2;
+                    background-color: #272822;
+                    -moz-tab-size: 4;
+                    -o-tab-size: 4;
+                    tab-size: 4;
+                  "
+                ><code class="language-php" data-lang="php">namespace Illuminate\Database\Eloquent\Relations;
+
+class BelongsToMany extends Relation
+{
+    public function touch()
+    {
+        $key = $this-&gt;getRelated()-&gt;getKeyName();
+
+        $columns = [
+            $this-&gt;related-&gt;getUpdatedAtColumn() =&gt; $this-&gt;related-&gt;freshTimestampString(),
+        ];
+
+        // If we actually have IDs for the relation, we will run the query to update all
+        // the related model&#39;s timestamps, to make sure these all reflect the changes
+        // to the parent models. This will help us keep any caching synced up here.
+        if (count($ids = $this-&gt;allRelatedIds()) &gt; 0) {
+            $this-&gt;getRelated()-&gt;newQueryWithoutRelationships()-&gt;whereIn($key, $ids)-&gt;update($columns);
+        }
+    }
+}
+</code></pre>
+              </div>
+              <p>
+                This query will basically generate a single update to bump the
+                roles.updated_at column. Something like this:
+              </p>
+              <div class="highlight">
+                <pre
+                  style="
+                    color: #f8f8f2;
+                    background-color: #272822;
+                    -moz-tab-size: 4;
+                    -o-tab-size: 4;
+                    tab-size: 4;
+                  "
+                ><code class="language-sql" data-lang="sql"><span style="color:#66d9ef">update</span> roles <span style="color:#66d9ef">set</span> roles.updated_at <span style="color:#f92672">=</span> now() <span style="color:#66d9ef">where</span> roles.id <span style="color:#66d9ef">in</span> (<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>)
+</code></pre>
+              </div>
+              <p>
+                Will be executed. (in this example the user has the role 1, 2
+                and 3 affected)
+              </p>
+              <h3 id="and-the-problem">
+                And the problem?<a
+                  href="#and-the-problem"
+                  class="hanchor"
+                  ariaLabel="Anchor"
+                  >&#8983;</a
+                >
+              </h3>
+              <p>
+                Well, as you may see it coming the problem was&hellip; We have
+                models with more than <strong>120,000</strong> child in their
+                relationship. And since Laravel is trying to execute the update
+                request in one shot, it has encountered a MySQL limit: the
+                placeholder limit.
+              </p>
+              <p>
+                This limit in MySQL is currently at 65,535 (<a
+                  href="https://github.com/mysql/mysql-server/blob/3290a66c89eb1625a7058e0ef732432b6952b435/sql/sql_prepare.cc#L1505"
+                  >see this MySQL commit</a
+                >).
+              </p>
+              <h2 id="how-to-handle-such-case">
+                How to handle such case?<a
+                  href="#how-to-handle-such-case"
+                  class="hanchor"
+                  ariaLabel="Anchor"
+                  >&#8983;</a
+                >
+              </h2>
+              <p>
+                The way we have handled this situation was simply by not using
+                <code>$touches</code>, and manually doing the touches chunk by
+                chunk on the roles to not reach the limit.
+              </p>
+              <p>
+                I have chosen to use
+                <a
+                  href="https://laravel.com/docs/8.x/events#registering-events-and-listeners"
+                  >listeners</a
+                >
+                for that. The idea behind listeners is really simple: each time
+                a model is <em>created</em>, <em>updated</em>, <em>saved</em>,
+                <em>deleted</em>, an event is dispatched, and you can react on
+                it by writing special listener.
+              </p>
+              <h3 id="define-the-usersaved-event">
+                Define the UserSaved event<a
+                  href="#define-the-usersaved-event"
+                  class="hanchor"
+                  ariaLabel="Anchor"
+                  >&#8983;</a
+                >
+              </h3>
+              <p>
+                The first thing is to create an event that will be fired when
+                the User model is saved.
+              </p>
+              <div class="highlight">
+                <pre
+                  style="
+                    color: #f8f8f2;
+                    background-color: #272822;
+                    -moz-tab-size: 4;
+                    -o-tab-size: 4;
+                    tab-size: 4;
+                  "
+                ><code class="language-sh" data-lang="sh">php artisan make:event UserSaved
+</code></pre>
+              </div>
+              <p>and then references it in the model:</p>
+              <div class="highlight">
+                <pre
+                  style="
+                    color: #f8f8f2;
+                    background-color: #272822;
+                    -moz-tab-size: 4;
+                    -o-tab-size: 4;
+                    tab-size: 4;
+                  "
+                ><code class="language-php" data-lang="php">namespace App\Models;
+
+/**
+ * @property Collection&lt;<span style="color:#f92672">Role</span>&gt; $roles
+ */
+class User extends Model
+{
+    protected $dispatchesEvents = [
+        &#39;saved&#39; =&gt; UserSaved::class,
+    ];
+
+    public function roles(): BelongsToMany
+    {
+        return $this-&gt;belongsToMany(Role::class);
+    }
+}
+</code></pre>
+              </div>
+              <h3 id="define-the-userlistener">
+                Define the UserListener<a
+                  href="#define-the-userlistener"
+                  class="hanchor"
+                  ariaLabel="Anchor"
+                  >&#8983;</a
+                >
+              </h3>
+              <p>
+                Then we&rsquo;ll need to create the listener that will handle
+                the user events:
+              </p>
+              <div class="highlight">
+                <pre
+                  style="
+                    color: #f8f8f2;
+                    background-color: #272822;
+                    -moz-tab-size: 4;
+                    -o-tab-size: 4;
+                    tab-size: 4;
+                  "
+                ><code class="language-php" data-lang="php">php artisan make:listener UserListener
+</code></pre>
+              </div>
+              <p>
+                and then we&rsquo;ll need to listen for this particular event:
+              </p>
+              <div class="highlight">
+                <pre
+                  style="
+                    color: #f8f8f2;
+                    background-color: #272822;
+                    -moz-tab-size: 4;
+                    -o-tab-size: 4;
+                    tab-size: 4;
+                  "
+                ><code class="language-php" data-lang="php">namespace App\Listeners;
+
+class UserListener
+{
+    public function handleUserSaved(UserSaved $event)
+    {
+        // Take roles ids by batch of 1000 and run a single SQL query
+        // to bump updated_at.
+        $event-&gt;user-&gt;roles()-&gt;chunk(1000, function (Collection $role) {
+            Role::whereIn(&#39;id&#39;, $role-&gt;pluck(&#39;id&#39;))-&gt;update([&#39;updated_at&#39; =&gt; Carbon::now()]);
+        });
+    }
+}
+</code></pre>
+              </div>
+              <h2
+                id="isnt-this-workaround-odd-shouldnt-touches-work-out-of-the-box"
+              >
+                Isn&rsquo;t this workaround odd? Shouldn&rsquo;t $touches work
+                out-of-the-box?<a
+                  href="#isnt-this-workaround-odd-shouldnt-touches-work-out-of-the-box"
+                  class="hanchor"
+                  ariaLabel="Anchor"
+                  >&#8983;</a
+                >
+              </h2>
+              <p>
+                Eh, while this may be <em>opinionated</em> (but that&rsquo;s my
+                blog :p). I guess yes. As a user of Laravel I would either
+                expect:
+              </p>
+              <ul>
+                <li>The framework to handle such cases</li>
+                <li>
+                  Having a note somewhere in the docs that explain the limits of
+                  <code>$touches</code>
+                </li>
+              </ul>
+              <p>
+                I have raised an
+                <a href="https://github.com/laravel/framework/issues/39259"
+                  >issue</a
+                >
+                to laravel/framework to discuss this bug. After a bit of
+                discussion it has come up that fixing the framework may not be
+                the best thing to do since this use-case is quite rare and the
+                fix is a bit opinionated.
+              </p>
+              <p>
+                Therefore, opening a
+                <a href="https://github.com/laravel/docs/pull/7373"
+                  >pull request</a
+                >
+                in laravel/docs to mention the technical limits of
+                <code>$touches</code> was the logical follow-up to do. Sadly,
+                the PR was rejected without taking time to think about it.
+              </p>
+              <p>
+                I must say I&rsquo;m a bit disappointed of how the situation has
+                ended, but&hellip; <em>meh</em>.
+              </p>
+              <p>Happy hacking!</p>
+            </div>
+          </div>
+
+          <div id="disqus_thread"></div>
+          <script type="application/javascript">
+            var disqus_config = function () {};
+            (function () {
+              if (
+                ["localhost", "127.0.0.1"].indexOf(window.location.hostname) !=
+                -1
+              ) {
+                document.getElementById("disqus_thread").innerHTML =
+                  "Disqus comments not available by default when the website is previewed locally.";
+                return;
+              }
+              var d = document,
+                s = d.createElement("script");
+              s.async = true;
+              s.src = "//" + "creekorful-me" + ".disqus.com/embed.js";
+              s.setAttribute("data-timestamp", +new Date());
+              (d.head || d.body).appendChild(s);
+            })();
+          </script>
+          <noscript
+            >Please enable JavaScript to view the
+            <a href="https://disqus.com/?ref_noscript"
+              >comments powered by Disqus.</a
+            ></noscript
+          >
+          <a href="https://disqus.com" class="dsq-brlink"
+            >comments powered by <span class="logo-disqus">Disqus</span></a
+          >
+        </div>
+      </div>
+
+      <footer class="footer">
+        <div class="footer__inner">
+          <div class="copyright">
+            <span>© 2021 Powered by <a href="http://gohugo.io">Hugo</a></span>
+
+            <span
+              >:: Theme made by
+              <a href="https://twitter.com/panr">panr</a></span
+            >
+          </div>
+        </div>
+      </footer>
+
+      <script src="/assets/main.js"></script>
+      <script src="/assets/prism.js"></script>
+
+      This website is open source. <br />
+      Feel free to submit a PR if you spot a mistake :)<br /><br />
+
+      <a href="https://github.com/creekorful/blog"
+        >https://github.com/creekorful/blog</a
+      >
+    </div>
+  </body>
+</html>
